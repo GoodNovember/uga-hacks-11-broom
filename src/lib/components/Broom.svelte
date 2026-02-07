@@ -3,6 +3,7 @@
   import { getContext } from 'svelte'
   import { RigidBody, Collider, usePhysicsTask } from '@threlte/rapier'
   import { Vector3, Quaternion, Euler } from 'three'
+  import Dawg from './Dawg.svelte'
 
   let { rigidBody = $bindable() } = $props()
 
@@ -108,17 +109,13 @@
     bind:rigidBody
   >
     <Collider shape="cuboid" args={[0.15, 0.1, 0.8]} />
-
-    <!-- Handle (cylinder along Z axis) -->
-    <T.Mesh rotation={[Math.PI / 2, 0, 0]}>
-      <T.CylinderGeometry args={[0.03, 0.03, 1.5, 8]} />
-      <T.MeshStandardMaterial color="#8B4513" />
-    </T.Mesh>
-
-    <!-- Bristles (cone at back end) -->
-    <T.Mesh position={[0, 0, -0.9]} rotation={[Math.PI / 2, 0, 0]}>
-      <T.ConeGeometry args={[0.15, 0.5, 8]} />
-      <T.MeshStandardMaterial color="#DAA520" />
-    </T.Mesh>
+    <Dawg >
+      {#snippet fallback()}
+        <T.Mesh>
+          <T.BoxGeometry args={[0.3, 0.2, 1.6]} />
+          <T.MeshStandardMaterial color="red" />
+        </T.Mesh>
+      {/snippet}
+    </Dawg> 
   </RigidBody>
 </T.Group>

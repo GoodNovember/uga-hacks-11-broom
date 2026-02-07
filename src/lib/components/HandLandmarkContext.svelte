@@ -17,6 +17,7 @@
   let activeGesture = $state<string | null>(null)
   let activeFingerDirection = $state<{x: number, y: number}>({x: 0, y: 0})
   let activePaused = $state(false)
+  let streamReady = $state(false)
 
   // Double-fist pause detection
   let wasFist = false
@@ -53,6 +54,7 @@
     }
 
     ctx.drawImage(mediaElement, 0, 0, canvas.width, canvas.height)
+    if (!streamReady) streamReady = true
 
     if(handLandmarker){
       const results: HandLandmarkerResult = handLandmarker.detectForVideo(mediaElement, performance.now())
@@ -234,6 +236,13 @@
 
 <canvas class="active-camera-preview" bind:this={canvas}></canvas>
 
+{#if !streamReady}
+  <div class="loading-overlay">
+    <div class="spinner"></div>
+    <p class="loading-label">Starting camera stream...</p>
+  </div>
+{/if}
+
 {#if activePaused}
   <div class="pause-overlay">
     <div class="pause-text">PAUSED</div>
@@ -254,6 +263,33 @@
     height: 150px;
     border: 2pt solid white;
     z-index: 10;
+  }
+  .loading-overlay {
+    position: fixed;
+    inset: 0;
+    background: #1a1a2e;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 20;
+    gap: 1.5rem;
+  }
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(255, 215, 0, 0.2);
+    border-top-color: #FFD700;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  .loading-label {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.9rem;
+    margin: 0;
   }
   .pause-overlay {
     position: fixed;
