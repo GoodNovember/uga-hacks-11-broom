@@ -1,4 +1,4 @@
-# Broomhandle.tech Game!
+# Broomhandle Game!
 
 a browser game by Victor Lawrence, made for UGA Hacks 11.
 
