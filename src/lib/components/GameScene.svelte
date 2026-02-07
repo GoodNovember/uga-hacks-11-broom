@@ -16,6 +16,15 @@
   const handLandmarkContext = getContext("handLandmarker")
 
   const isPaused = $derived.by(()=> handLandmarkContext?.paused)
+  const pauseProgress = $derived.by(()=> handLandmarkContext?.pauseProgress ?? 0)
+  const isThumbsUp = $derived.by(()=> handLandmarkContext?.thumbsUp ?? false)
+
+  // Thumbs-up to restart when game is won
+  $effect(()=>{
+    if ($gameWon && isThumbsUp) {
+      handlePlayAgain()
+    }
+  })
 
   // Seeded random for ring placement
   function seededRandom(seed: number) {
@@ -69,23 +78,24 @@
     {#if broomRigidBody}
       <ChaseCamera rigidBody={broomRigidBody} />
     {/if}
-    {#if !isPaused}
-      <HUD>
-        <HTML center>
-          <div class="score-hud">
-            Rings Collected: <span class="current score">{$score}</span> / <span class="max score">{$maxScore}</span>
-          </div>
-        </HTML>
-      </HUD>
-    {:else}
-      <HUD>
-        <HTML center>
+    <HUD>
+      <HTML center>
+        <div class="score-hud">
+          Rings Collected: <span class="current score">{$score}</span> / <span class="max score">{$maxScore}</span>
+        </div>
+        {#if isPaused}
           <div class="pause-overlay">
             <div class="pause-text">PAUSED</div>
+            <div class="pause-hint">Open palm / Start / Esc to resume</div>
+            {#if pauseProgress > 0}
+              <div class="pause-progress">
+                <div class="pause-progress-bar" style:width="{pauseProgress * 100}%"></div>
+              </div>
+            {/if}
           </div>
-        </HTML>
-      </HUD>
-    {/if}
+        {/if}
+      </HTML>
+    </HUD>
 
     {#if $gameWon}
       <HUD>
@@ -97,6 +107,7 @@
               <p class="congrats-subtitle">You collected all {$maxScore} rings!</p>
               <div class="congrats-score">{$score} / {$maxScore}</div>
               <button class="congrats-btn" onclick={handlePlayAgain}>Play Again</button>
+              <p class="congrats-gesture-hint">or show a thumbs up!</p>
             </div>
           </div>
         </HTML>
@@ -199,6 +210,11 @@
     transform: scale(1.05);
     box-shadow: 0 0 25px rgba(255, 215, 0, 0.4);
   }
+  .congrats-gesture-hint {
+    margin-top: 0.75rem;
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.5);
+  }
 
   @keyframes fadeIn {
     from { opacity: 0; }
@@ -231,5 +247,24 @@
     color: white;
     letter-spacing: 0.3em;
     text-shadow: 0 0 20px rgba(0, 200, 255, 0.8);
+  }
+  .pause-hint {
+    margin-top: 1rem;
+    font-size: 1.2rem;
+    color: rgba(255, 255, 255, 0.7);
+  }
+  .pause-progress {
+    margin-top: 1.5rem;
+    width: 200px;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .pause-progress-bar {
+    height: 100%;
+    background: cyan;
+    border-radius: 3px;
+    transition: width 0.1s linear;
   }
 </style>

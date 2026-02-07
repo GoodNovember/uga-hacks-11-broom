@@ -104,7 +104,9 @@
     get pointing() { return currentGesture !== null },
     get gesture() { return currentGesture },
     get fingerDirection() { return currentDirection },
-    get paused() { return paused }
+    get paused() { return paused },
+    get pauseProgress() { return 0 },
+    get thumbsUp() { return false }
   })
 </script>
 

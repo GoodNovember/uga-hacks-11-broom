@@ -9,6 +9,7 @@
  *
  * MediaPipe landmark indices:
  *   0 = WRIST
+ *   1 = THUMB_CMC, 2 = THUMB_MCP, 3 = THUMB_IP, 4 = THUMB_TIP
  *   5 = INDEX_MCP, 6 = INDEX_PIP, 7 = INDEX_DIP, 8 = INDEX_TIP
  *   9 = MIDDLE_MCP, 10 = MIDDLE_PIP, 11 = MIDDLE_DIP, 12 = MIDDLE_TIP
  *   13 = RING_MCP, 14 = RING_PIP, 15 = RING_DIP, 16 = RING_TIP
@@ -110,4 +111,39 @@ export function isFist(landmarks) {
   const ring = isFingerExtended(landmarks, 13, 14, 15, 16, 160)
   const pinky = isFingerExtended(landmarks, 17, 18, 19, 20, 160)
   return !index && !middle && !ring && !pinky
+}
+
+/**
+ * Check if the hand is showing an open palm (all fingers extended).
+ * @param {Landmark[] | null | undefined} landmarks
+ * @returns {boolean}
+ */
+export function isOpenPalm(landmarks) {
+  if (!landmarks || landmarks.length < 21) return false
+  const index = isFingerExtended(landmarks, 5, 6, 7, 8, 140)
+  const middle = isFingerExtended(landmarks, 9, 10, 11, 12, 160)
+  const ring = isFingerExtended(landmarks, 13, 14, 15, 16, 160)
+  const pinky = isFingerExtended(landmarks, 17, 18, 19, 20, 160)
+  return index && middle && ring && pinky
+}
+
+/**
+ * Check if the hand is showing a thumbs-up gesture.
+ * Thumb tip above index MCP (pointing up) with all other fingers curled.
+ * @param {Landmark[] | null | undefined} landmarks
+ * @returns {boolean}
+ */
+export function isThumbsUp(landmarks) {
+  if (!landmarks || landmarks.length < 21) return false
+  // All four fingers must be curled
+  const index = isFingerExtended(landmarks, 5, 6, 7, 8, 140)
+  const middle = isFingerExtended(landmarks, 9, 10, 11, 12, 160)
+  const ring = isFingerExtended(landmarks, 13, 14, 15, 16, 160)
+  const pinky = isFingerExtended(landmarks, 17, 18, 19, 20, 160)
+  if (index || middle || ring || pinky) return false
+  // Thumb tip (4) must be above thumb MCP (2) — in screen space, lower y = higher
+  const thumbTip = landmarks[4]
+  const thumbMcp = landmarks[2]
+  const indexMcp = landmarks[5]
+  return thumbTip.y < thumbMcp.y && thumbTip.y < indexMcp.y
 }

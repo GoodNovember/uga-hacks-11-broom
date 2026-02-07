@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, setContext } from "svelte";
-  import { detectGesture, isFist } from "$lib/utils/handControls.js";
+  import { detectGesture, isOpenPalm, isThumbsUp } from "$lib/utils/handControls.js";
 
   let {
     mediaDevice,
@@ -17,17 +17,15 @@
   let activeGesture = $state<string | null>(null)
   let activeFingerDirection = $state<{x: number, y: number}>({x: 0, y: 0})
   let activePaused = $state(false)
+  let activeThumbsUp = $state(false)
   let streamReady = $state(false)
   let videoAspect = $state(1.5)
 
-  // Double-fist pause detection
-  let wasFist = false
-  let fistTimestamps: number[] = []
-  const DOUBLE_FIST_WINDOW = 1500 // ms
-
-  // Unpause requires holding point gesture for a bit
-  let pointStartTime = 0
-  const UNPAUSE_HOLD_MS = 600
+  // Open-palm hold pause/unpause detection
+  let palmHoldStart = 0
+  const PAUSE_HOLD_MS = 1500 // hold open palm for 1.5s to toggle pause
+  let pauseProgress = $state(0) // 0-1 progress for visual indicator
+  let palmCooldown = false // must release palm before toggling again
 
   mediaElement.autoplay = true
   mediaElement.playsInline = true
@@ -67,31 +65,25 @@
       for(const landmarks of activeResults.landmarks){
         if(!ctx || !canvas) continue
         const gesture = detectGesture(landmarks)
-        const fist = isFist(landmarks)
+        const openPalm = isOpenPalm(landmarks)
+        activeThumbsUp = isThumbsUp(landmarks)
 
-        // Double-fist pause detection
+        // Open-palm hold pause/unpause detection
         const now = performance.now()
-        if (fist && !wasFist) {
-          // Transition INTO fist
-          fistTimestamps.push(now)
-          // Prune old timestamps
-          fistTimestamps = fistTimestamps.filter(t => now - t < DOUBLE_FIST_WINDOW)
-          if (fistTimestamps.length >= 3) {
+        if (openPalm && !palmCooldown) {
+          if (palmHoldStart === 0) palmHoldStart = now
+          const held = now - palmHoldStart
+          pauseProgress = Math.min(held / PAUSE_HOLD_MS, 1)
+          if (held >= PAUSE_HOLD_MS) {
             activePaused = !activePaused
-            fistTimestamps = []
+            palmHoldStart = 0
+            pauseProgress = 0
+            palmCooldown = true // must release before toggling again
           }
-        }
-        wasFist = fist
-
-        // Pointing (index finger) held for a moment unpauses
-        if (activePaused && gesture === "point") {
-          if (pointStartTime === 0) pointStartTime = now
-          if (now - pointStartTime > UNPAUSE_HOLD_MS) {
-            activePaused = false
-            pointStartTime = 0
-          }
-        } else {
-          pointStartTime = 0
+        } else if (!openPalm) {
+          palmHoldStart = 0
+          pauseProgress = 0
+          palmCooldown = false
         }
 
         // When paused, suppress flight gestures
@@ -231,6 +223,12 @@
     },
     get paused(){
       return activePaused
+    },
+    get pauseProgress(){
+      return pauseProgress
+    },
+    get thumbsUp(){
+      return activeThumbsUp
     }
   })
 
@@ -245,12 +243,18 @@
   </div>
 {/if}
 
-<!-- {#if activePaused}
-  <div class="pause-overlay">
-    <div class="pause-text">PAUSED</div>
-    <div class="pause-hint">Point to resume ☝️</div>
+{#if !activePaused && pauseProgress > 0}
+  <div class="palm-indicator">
+    <svg width="60" height="60" viewBox="0 0 60 60">
+      <circle cx="30" cy="30" r="26" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="4" />
+      <circle cx="30" cy="30" r="26" fill="none" stroke="cyan" stroke-width="4"
+        stroke-dasharray={2 * Math.PI * 26}
+        stroke-dashoffset={2 * Math.PI * 26 * (1 - pauseProgress)}
+        transform="rotate(-90 30 30)" />
+    </svg>
+    <span class="palm-label">II</span>
   </div>
-{/if} -->
+{/if}
 
 {@render children?.()}
 
@@ -292,27 +296,21 @@
     font-size: 0.9rem;
     margin: 0;
   }
-  .pause-overlay {
+  .palm-indicator {
     position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.5);
+    top: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 15;
     display: flex;
-    flex-direction: column;
-    justify-content: center;
     align-items: center;
-    z-index: 5;
+    justify-content: center;
     pointer-events: none;
   }
-  .pause-text {
-    font-size: 4rem;
-    font-weight: bold;
-    color: white;
-    letter-spacing: 0.3em;
-    text-shadow: 0 0 20px rgba(0, 200, 255, 0.8);
-  }
-  .pause-hint {
-    margin-top: 1rem;
+  .palm-label {
+    position: absolute;
+    color: cyan;
     font-size: 1.2rem;
-    color: rgba(255, 255, 255, 0.7);
+    font-weight: bold;
   }
 </style>
