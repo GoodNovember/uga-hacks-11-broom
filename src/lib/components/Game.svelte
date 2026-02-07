@@ -12,6 +12,5 @@
   .game-canvas-container {
     width: 100%;
     height: 100dvh;
-    border: 1rem solid pink;    
   }
 </style>
