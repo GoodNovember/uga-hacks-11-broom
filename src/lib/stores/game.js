@@ -1,5 +1,6 @@
 import { writable } from 'svelte/store'
 
+export const gameState = writable('menu')
 export const score = writable(0)
 export const maxScore = writable(0)
 export const isPaused = writable(false)

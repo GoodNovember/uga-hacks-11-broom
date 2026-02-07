@@ -3,6 +3,10 @@
   import { FilesetResolver, HandLandmarker } from "@mediapipe/tasks-vision";
   import HandLandmarkerContext from "$lib/components/HandLandmarkContext.svelte";
   import Game from "$lib/components/Game.svelte";
+  import StartScreen from "$lib/components/StartScreen.svelte";
+  import StartScreenUI from "$lib/components/StartScreenUI.svelte";
+  import { Canvas } from "@threlte/core";
+  import { gameState } from "$lib/stores/game";
 
   let mediaDevices: MediaDeviceInfo[] = $state([])
   let chooseCameraDialog = $state<HTMLDialogElement>()
@@ -11,29 +15,14 @@
 
   let selectedMediaDeviceId = $state()
 
-  // Loading stages
-  let loadingStage = $state<"idle" | "wasm" | "model" | "camera" | "ready">("idle")
   let modelReady = $state(false)
   let cameraReady = $state(false)
 
-  $effect(() => {
-    if (modelReady && cameraReady) loadingStage = "ready"
-  })
-
-  async function populateVideoDevices(){
-    await navigator.mediaDevices.getUserMedia({audio: false, video: true});
-    const devices = await navigator.mediaDevices.enumerateDevices();
-    const videoDevices = devices.filter(device => device.kind === 'videoinput');
-    mediaDevices = videoDevices
-  }
-
+  // Load hand tracking in the background immediately
   onMount(async () => {
-    // await populateVideoDevices()
-    loadingStage = "wasm"
     const vision = await FilesetResolver.forVisionTasks(
       "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
     );
-    loadingStage = "model"
     handLandmarker = await HandLandmarker.createFromOptions(
     vision,
     {
@@ -46,6 +35,25 @@
     });
     modelReady = true
   })
+
+  // Transition to playing once both model and camera are ready
+  $effect(() => {
+    if ($gameState === 'loading' && modelReady && cameraReady) {
+      $gameState = 'playing'
+    }
+  })
+
+  async function populateVideoDevices(){
+    await navigator.mediaDevices.getUserMedia({audio: false, video: true});
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const videoDevices = devices.filter(device => device.kind === 'videoinput');
+    mediaDevices = videoDevices
+  }
+
+  function handlePlay() {
+    $gameState = 'loading'
+    showCameraSelectionDialog()
+  }
 
   async function showCameraSelectionDialog(){
     await populateVideoDevices()
@@ -60,7 +68,6 @@
     if(!selectedMediaDeviceId) {
       throw new Error("No media device selected")
     }
-    loadingStage = "camera"
     mediaDevice = await navigator.mediaDevices.getUserMedia({
       video: {
         deviceId: selectedMediaDeviceId
@@ -70,7 +77,6 @@
     cameraReady = true
     chooseCameraDialog?.close()
   }
-
 </script>
 
 <dialog bind:this={chooseCameraDialog}>
@@ -91,97 +97,42 @@
   </div>
 </dialog>
 
-
-{#if loadingStage === "ready" && mediaDevice}
+{#if $gameState === 'playing' && mediaDevice}
   <HandLandmarkerContext {mediaDevice} {handLandmarker} >
     <Game />
   </HandLandmarkerContext>
 {:else}
-  <div class="full-screen">
-    <div class="loading-container">
-      {#if !cameraReady}
-        <button onclick={showCameraSelectionDialog}>Choose a Camera</button>
-      {/if}
-<!-- 
-      {#if loadingStage !== "idle" && loadingStage !== "ready"}
-        <div class="progress-section">
-          <div class="progress-bar-track">
-            <div
-              class="progress-bar-fill"
-              style="width: {loadingStage === 'wasm' ? '20' : loadingStage === 'model' ? '50' : loadingStage === 'camera' ? (modelReady ? '90' : '70') : '100'}%"
-            ></div>
-          </div>
-          <p class="loading-text">
-            {#if loadingStage === "wasm"}
-              Loading vision engine...
-            {:else if loadingStage === "model"}
-              Loading hand tracking model...
-            {:else if loadingStage === "camera" && !modelReady}
-              Loading hand tracking model...
-            {:else if loadingStage === "camera"}
-              Starting camera...
-            {/if}
-          </p>
-        </div>
-      {/if} -->
-    </div>
+  <div class="start-canvas-container">
+    <Canvas>
+      <StartScreen />
+    </Canvas>
+    <StartScreenUI onPlay={handlePlay} />
+    {#if $gameState === 'loading'}
+      <div class="loading-indicator">
+        {#if !modelReady}
+          Loading hand tracking...
+        {:else if !cameraReady}
+          Waiting for camera...
+        {/if}
+      </div>
+    {/if}
   </div>
 {/if}
 
 <style>
-  .full-screen {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: #1a1a2e;
-  }
-  .loading-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2rem;
-  }
-  .loading-container button {
-    padding: 0.8rem 2rem;
-    font-size: 1.1rem;
-    border-radius: 8px;
-    border: 2px solid #FFD700;
-    background: transparent;
-    color: #FFD700;
-    cursor: pointer;
-    transition: background 0.2s;
-  }
-  .loading-container button:hover {
-    background: rgba(255, 215, 0, 0.15);
-  }
-  .progress-section {
-    width: 280px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.75rem;
-  }
-  .progress-bar-track {
+  .start-canvas-container {
     width: 100%;
-    height: 6px;
-    background: rgba(255, 255, 255, 0.15);
-    border-radius: 3px;
-    overflow: hidden;
+    height: 100dvh;
+    position: relative;
   }
-  .progress-bar-fill {
-    height: 100%;
-    background: #FFD700;
-    border-radius: 3px;
-    transition: width 0.4s ease;
-  }
-  .loading-text {
+
+  .loading-indicator {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
     color: rgba(255, 255, 255, 0.6);
-    font-size: 0.85rem;
-    margin: 0;
+    font-size: 0.9rem;
+    z-index: 10;
   }
 </style>
