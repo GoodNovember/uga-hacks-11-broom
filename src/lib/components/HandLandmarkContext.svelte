@@ -18,6 +18,7 @@
   let activeFingerDirection = $state<{x: number, y: number}>({x: 0, y: 0})
   let activePaused = $state(false)
   let streamReady = $state(false)
+  let videoAspect = $state(1.5)
 
   // Double-fist pause detection
   let wasFist = false
@@ -51,6 +52,7 @@
     if(canvas.width !== mediaElement.videoWidth || canvas.height !== mediaElement.videoHeight){
       canvas.width = mediaElement.videoWidth
       canvas.height = mediaElement.videoHeight
+      videoAspect = mediaElement.videoWidth / mediaElement.videoHeight
     }
 
     ctx.drawImage(mediaElement, 0, 0, canvas.width, canvas.height)
@@ -234,7 +236,7 @@
 
 </script>
 
-<canvas class="active-camera-preview" bind:this={canvas}></canvas>
+<canvas class="active-camera-preview" bind:this={canvas} style:aspect-ratio={videoAspect}></canvas>
 
 {#if !streamReady}
   <div class="loading-overlay">
@@ -259,7 +261,6 @@
     bottom: 1rem;
     border-radius: 150px;
     border-top-left-radius: 1rem;
-    aspect-ratio: 1.5 / 1;
     height: 150px;
     border: 2pt solid white;
     z-index: 10;
