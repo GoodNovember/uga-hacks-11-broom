@@ -1,10 +1,11 @@
-<script>
+<script lang="ts">
   import { onMount } from "svelte";
   import { FilesetResolver, HandLandmarker } from "@mediapipe/tasks-vision";
-  import MediaDeviceViewer from "$lib/components/MediaDeviceViewer.svelte";
+  import HandLandmarkerContext from "$lib/components/HandLandmarkContext.svelte";
+  import Game from "$lib/components/Game.svelte";
 
-  let mediaDevices = $state([])
-  let chooseCameraDialog = $state()
+  let mediaDevices: MediaDeviceInfo[] = $state([])
+  let chooseCameraDialog = $state<HTMLDialogElement>()
   let mediaDevice = $state()
   let handLandmarker = $state()
 
@@ -73,9 +74,24 @@
 
 
 {#if mediaDevice}
-  <MediaDeviceViewer {mediaDevice} {handLandmarker} />
+  <HandLandmarkerContext {mediaDevice} {handLandmarker} >
+    <Game />
+  </HandLandmarkerContext>
 {:else}
-  <div>
-    <button onclick={showCameraSelectionDialog}>Choose Camera</button>
+  <div class="full-screen">
+    <button onclick={showCameraSelectionDialog}>Choose a Camera</button>
   </div>
 {/if}
+
+<style>
+  .full-screen{
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+</style>

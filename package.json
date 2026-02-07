@@ -24,6 +24,7 @@
 		"@mediapipe/tasks-vision": "^0.10.32",
 		"@sveltejs/adapter-node": "^5.5.2",
 		"@threlte/core": "^8.3.1",
+		"@threlte/extras": "^9.7.1",
 		"@threlte/rapier": "^3.2.0",
 		"three": "^0.182.0"
 	}

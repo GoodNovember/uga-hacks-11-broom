@@ -1,16 +1,17 @@
-<script>
-  import { onMount } from "svelte";
+<script lang="ts">
+  import { onMount, setContext } from "svelte";
 
   let {
     mediaDevice,
-    handLandmarker
+    handLandmarker,
+    children
   } = $props()
 
-  let canvas = $state()
-  let ctx = $state()
+  let canvas = $state<HTMLCanvasElement | null>(null)
+  let ctx = $state<CanvasRenderingContext2D | null>(null)
   let mediaElement = document.createElement("video")
 
-  let activeResults = $state(null)
+  let activeResults = $state<HandLandmarkerResult | undefined | null>(null)
 
   mediaElement.autoplay = true
   mediaElement.playsInline = true
@@ -20,7 +21,11 @@
     mediaElement.play().catch(() => {})
   })
 
-  let handle = $state()
+  let handle = $state<number>(-1)
+
+  type HandLandmarkerResult = {
+    landmarks: Array<Array<{x: number, y: number, z: number}>>
+  }
 
   function heartbeat(){
     handle = requestAnimationFrame(heartbeat)
@@ -36,11 +41,13 @@
     ctx.drawImage(mediaElement, 0, 0, canvas.width, canvas.height)
 
     if(handLandmarker){
-      const results = handLandmarker.detectForVideo(mediaElement, performance.now())
+      const results: HandLandmarkerResult = handLandmarker.detectForVideo(mediaElement, performance.now())
       activeResults = results
     }
 
-    function drawLandmarks(landmarks, color){
+    function drawLandmarks(landmarks :Array<{x: number, y: number, z: number}>, color: string){
+      if(!ctx) return
+      if(!canvas) return
       ctx.fillStyle = color
       for(const landmark of landmarks){
         const x = landmark.x * canvas.width
@@ -59,34 +66,36 @@
   }
 
   onMount(()=>{
-    ctx = canvas.getContext("2d")
+    if(canvas){
+      ctx = canvas.getContext("2d")
+    }
     handle = requestAnimationFrame(heartbeat)
     return () =>{
       cancelAnimationFrame(handle)
     }
   })
 
+
+  setContext("handLandmarker", {
+    get results(){
+      return activeResults
+    }
+  })
+
 </script>
 
-<div class="media-device-viewer">
-  <canvas bind:this={canvas}></canvas>
-</div>
+<canvas class="active-camera-preview" bind:this={canvas}></canvas>
 
-{#if activeResults}
-  <pre>{JSON.stringify(activeResults, null, 2)}</pre>
-{/if}
+{@render children?.()}
 
 <style>
-  .media-device-viewer {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-  }
-
   canvas {
-    width: 100%;
-    height: 100%;
-    display: none;
+    position: absolute;
+    right: 1rem;
+    bottom: 1rem;
+    border-radius: 150px;
+    aspect-ratio: 1.5 / 1;
+    height: 150px;
+    border: 2pt solid white;
   }
 </style>
