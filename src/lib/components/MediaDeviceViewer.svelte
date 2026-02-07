@@ -68,10 +68,25 @@
 
 </script>
 
-<div>
+<div class="media-device-viewer">
   <canvas bind:this={canvas}></canvas>
 </div>
 
 {#if activeResults}
   <pre>{JSON.stringify(activeResults, null, 2)}</pre>
 {/if}
+
+<style>
+  .media-device-viewer {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  canvas {
+    width: 100%;
+    height: 100%;
+    display: none;
+  }
+</style>
