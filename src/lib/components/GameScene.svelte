@@ -13,12 +13,6 @@
 
 {#if results}
   {#each results.landmarks as hand, i}
-    <!-- {#each hand as landmark, j}
-      <T.Mesh position={[landmark.x - 0.5, -(landmark.y - 0.5), -landmark.z]}>
-        <T.SphereGeometry args={[0.02, 16, 16]} />
-        <T.MeshBasicMaterial color="red" />
-      </T.Mesh>
-    {/each} -->
     <ThreeDHand {hand} index={i} />
   {/each}
 {/if}
