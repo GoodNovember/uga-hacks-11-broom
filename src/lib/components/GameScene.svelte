@@ -16,7 +16,6 @@
   const handLandmarkContext = getContext("handLandmarker")
 
   const isPaused = $derived.by(()=> handLandmarkContext?.paused)
-  const pauseProgress = $derived.by(()=> handLandmarkContext?.pauseProgress ?? 0)
   const isThumbsUp = $derived.by(()=> handLandmarkContext?.thumbsUp ?? false)
 
   // Thumbs-up to restart when game is won
@@ -78,24 +77,15 @@
     {#if broomRigidBody}
       <ChaseCamera rigidBody={broomRigidBody} />
     {/if}
-    <HUD>
-      <HTML center>
-        <div class="score-hud">
-          Rings Collected: <span class="current score">{$score}</span> / <span class="max score">{$maxScore}</span>
-        </div>
-        {#if isPaused}
-          <div class="pause-overlay">
-            <div class="pause-text">PAUSED</div>
-            <div class="pause-hint">Open palm / Start / Esc to resume</div>
-            {#if pauseProgress > 0}
-              <div class="pause-progress">
-                <div class="pause-progress-bar" style:width="{pauseProgress * 100}%"></div>
-              </div>
-            {/if}
+    {#if !isPaused}
+      <HUD>
+        <HTML center>
+          <div class="score-hud">
+            Rings Collected: <span class="current score">{$score}</span> / <span class="max score">{$maxScore}</span>
           </div>
-        {/if}
-      </HTML>
-    </HUD>
+        </HTML>
+      </HUD>
+    {/if}
 
     {#if $gameWon}
       <HUD>
@@ -229,42 +219,5 @@
   @keyframes pulse {
     0%, 100% { transform: scale(1); }
     50% { transform: scale(1.2); }
-  }
-  .pause-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    z-index: 5;
-    pointer-events: none;
-  }
-  .pause-text {
-    font-size: 4rem;
-    font-weight: bold;
-    color: white;
-    letter-spacing: 0.3em;
-    text-shadow: 0 0 20px rgba(0, 200, 255, 0.8);
-  }
-  .pause-hint {
-    margin-top: 1rem;
-    font-size: 1.2rem;
-    color: rgba(255, 255, 255, 0.7);
-  }
-  .pause-progress {
-    margin-top: 1.5rem;
-    width: 200px;
-    height: 6px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 3px;
-    overflow: hidden;
-  }
-  .pause-progress-bar {
-    height: 100%;
-    background: cyan;
-    border-radius: 3px;
-    transition: width 0.1s linear;
   }
 </style>
