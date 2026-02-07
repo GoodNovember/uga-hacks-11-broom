@@ -245,12 +245,12 @@
   </div>
 {/if}
 
-{#if activePaused}
+<!-- {#if activePaused}
   <div class="pause-overlay">
     <div class="pause-text">PAUSED</div>
     <div class="pause-hint">Point to resume ☝️</div>
   </div>
-{/if}
+{/if} -->
 
 {@render children?.()}
 

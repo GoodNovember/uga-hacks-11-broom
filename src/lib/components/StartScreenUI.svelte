@@ -1,5 +1,5 @@
 <script>
-  let { onPlay } = $props()
+  let { onPlay, onPlayKeyboard, onPlayGamepad } = $props()
 </script>
 
 <div class="start-screen-overlay">
@@ -8,9 +8,19 @@
     <!-- <p class="game-subtitle">Ride the skies. Collect the rings.</p> -->
   </div>
 
-  <button class="play-button" onclick={onPlay}>
-    PLAY
-  </button>
+  <div class="actions">
+    <button class="play-button" onclick={onPlay}>
+      Play With Your Hands
+    </button>
+    
+    <button class="play-button" onclick={onPlayKeyboard}>
+      Play With Mouse and Keyboard
+    </button>
+
+    <button class="play-button" onclick={onPlayGamepad}>
+      Play With Gamepad
+    </button>
+  </div>
 </div>
 
 <style>
@@ -45,6 +55,12 @@
     margin-bottom: 8rem;
   }
 
+  .actions {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  } 
+
   .game-subtitle {
     font-size: 1.3rem;
     color: rgba(255, 255, 255, 0.7);
@@ -71,5 +87,12 @@
   .play-button:hover {
     transform: scale(1.08);
     box-shadow: 0 0 50px rgba(255, 215, 0, 0.5);
+  }
+
+  .play-button:disabled {
+    background: linear-gradient(135deg, #888888, #555555);
+    color: #1a1a2e;
+    cursor: not-allowed;
+    box-shadow: none;
   }
 </style>

@@ -73,7 +73,15 @@
       <HUD>
         <HTML center>
           <div class="score-hud">
-            Your score: <span class="current score">{$score}</span> / <span class="max score">{$maxScore}</span>
+            Rings Collected: <span class="current score">{$score}</span> / <span class="max score">{$maxScore}</span>
+          </div>
+        </HTML>
+      </HUD>
+    {:else}
+      <HUD>
+        <HTML center>
+          <div class="pause-overlay">
+            <div class="pause-text">PAUSED</div>
           </div>
         </HTML>
       </HUD>
@@ -205,5 +213,23 @@
   @keyframes pulse {
     0%, 100% { transform: scale(1); }
     50% { transform: scale(1.2); }
+  }
+  .pause-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 5;
+    pointer-events: none;
+  }
+  .pause-text {
+    font-size: 4rem;
+    font-weight: bold;
+    color: white;
+    letter-spacing: 0.3em;
+    text-shadow: 0 0 20px rgba(0, 200, 255, 0.8);
   }
 </style>

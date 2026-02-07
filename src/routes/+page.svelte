@@ -6,7 +6,9 @@
   import StartScreen from "$lib/components/StartScreen.svelte";
   import StartScreenUI from "$lib/components/StartScreenUI.svelte";
   import { Canvas } from "@threlte/core";
-  import { gameState } from "$lib/stores/game";
+  import KeyboardMouseContext from "$lib/components/KeyboardMouseContext.svelte";
+  import GamepadContext from "$lib/components/GamepadContext.svelte";
+  import { gameState, inputMode } from "$lib/stores/game";
 
   let mediaDevices: MediaDeviceInfo[] = $state([])
   let chooseCameraDialog = $state<HTMLDialogElement>()
@@ -51,8 +53,19 @@
   }
 
   function handlePlay() {
+    $inputMode = 'hands'
     $gameState = 'loading'
     showCameraSelectionDialog()
+  }
+
+  function handlePlayKeyboard() {
+    $inputMode = 'keyboard'
+    $gameState = 'playing'
+  }
+
+  function handlePlayGamepad() {
+    $inputMode = 'gamepad'
+    $gameState = 'playing'
   }
 
   async function showCameraSelectionDialog(){
@@ -97,16 +110,24 @@
   </div>
 </dialog>
 
-{#if $gameState === 'playing' && mediaDevice}
+{#if $gameState === 'playing' && $inputMode === 'hands' && mediaDevice}
   <HandLandmarkerContext {mediaDevice} {handLandmarker} >
     <Game />
   </HandLandmarkerContext>
+{:else if $gameState === 'playing' && $inputMode === 'keyboard'}
+  <KeyboardMouseContext>
+    <Game />
+  </KeyboardMouseContext>
+{:else if $gameState === 'playing' && $inputMode === 'gamepad'}
+  <GamepadContext>
+    <Game />
+  </GamepadContext>
 {:else}
   <div class="start-canvas-container">
     <Canvas>
       <StartScreen />
     </Canvas>
-    <StartScreenUI onPlay={handlePlay} />
+    <StartScreenUI onPlay={handlePlay} onPlayKeyboard={handlePlayKeyboard} onPlayGamepad={handlePlayGamepad} />
     {#if $gameState === 'loading'}
       <div class="loading-indicator">
         {#if !modelReady}
