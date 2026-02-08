@@ -11,11 +11,11 @@
 
   // Tuning
   const FORWARD_SPEED = 15
-  const VELOCITY_LERP = 0.2
+  const VELOCITY_LERP_SPEED = 12       // per-second rate (framerate-independent)
   const RISE_SPEED = 6                  // vertical speed when rising
   const LOWER_SPEED = 6                 // vertical speed when lowering
   const YAW_RATE = 4.5                  // rad/s max turning (bumped to compensate for curve)
-  const ROTATION_LERP = 0.08
+  const ROTATION_LERP_SPEED = 5         // per-second rate (framerate-independent)
   const TURN_DEAD_ZONE = 0.08          // ignore tiny deflections
   const TURN_EXPONENT = 2.5            // power curve: higher = more center precision
 
@@ -30,7 +30,7 @@
   // Smoothed finger direction
   let smoothDirX = 0
   let smoothDirY = 0
-  const DIR_SMOOTH = 0.15
+  const DIR_SMOOTH_SPEED = 10  // per-second rate (framerate-independent)
 
   usePhysicsTask((delta) => {
     if (!rigidBody) return
@@ -50,9 +50,10 @@
     // Get finger direction from context
     const dir = handStuff?.fingerDirection ?? { x: 0, y: 0 }
 
-    // Smooth the direction to avoid jitter
-    smoothDirX += (dir.x - smoothDirX) * DIR_SMOOTH
-    smoothDirY += (dir.y - smoothDirY) * DIR_SMOOTH
+    // Smooth the direction to avoid jitter (framerate-independent)
+    const dirFactor = 1 - Math.exp(-DIR_SMOOTH_SPEED * delta)
+    smoothDirX += (dir.x - smoothDirX) * dirFactor
+    smoothDirY += (dir.y - smoothDirY) * dirFactor
 
     // Non-linear response curve: dead zone + power curve
     // Small deflections → nearly straight, large deflections → sharp turns
@@ -69,7 +70,8 @@
 
     const rot = rigidBody.rotation()
     quat.set(rot.x, rot.y, rot.z, rot.w)
-    quat.slerp(targetQuat, ROTATION_LERP)
+    const rotFactor = 1 - Math.exp(-ROTATION_LERP_SPEED * delta)
+    quat.slerp(targetQuat, rotFactor)
 
     // Apply rotation directly
     rigidBody.setRotation({ x: quat.x, y: quat.y, z: quat.z, w: quat.w }, true)
@@ -88,12 +90,13 @@
       z: worldForward.z * FORWARD_SPEED
     }
 
+    const velFactor = 1 - Math.exp(-VELOCITY_LERP_SPEED * delta)
     const currentVel = rigidBody.linvel()
     rigidBody.setLinvel(
       {
-        x: currentVel.x + (targetVel.x - currentVel.x) * VELOCITY_LERP,
-        y: currentVel.y + (targetVel.y - currentVel.y) * VELOCITY_LERP,
-        z: currentVel.z + (targetVel.z - currentVel.z) * VELOCITY_LERP
+        x: currentVel.x + (targetVel.x - currentVel.x) * velFactor,
+        y: currentVel.y + (targetVel.y - currentVel.y) * velFactor,
+        z: currentVel.z + (targetVel.z - currentVel.z) * velFactor
       },
       true
     )
