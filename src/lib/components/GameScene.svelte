@@ -6,7 +6,7 @@
   import ChaseCamera from './ChaseCamera.svelte'
   import Environment from './Environment.svelte'
   import Ring from './Ring.svelte'
-  import { maxScore, score, gameWon, gameKey } from '$lib/stores/game'
+  import { maxScore, score, gameWon, gameKey, inputMode } from '$lib/stores/game'
   import type { RigidBody } from '@threlte/rapier'
   import { Suspense, HTML, HUD, useViewport } from '@threlte/extras';
 
@@ -98,14 +98,16 @@
               <p class="congrats-subtitle">You collected all {$maxScore} rings!</p>
               <div class="congrats-score">{$score} / {$maxScore}</div>
               <button class="congrats-btn" onclick={handlePlayAgain}>Play Again</button>
-              <p class="congrats-gesture-hint">or hold a thumbs up! 👍</p>
-              <div class="thumbs-up-progress-container">
-                {#if thumbsUpProgress > 0}
-                <div class="thumbs-up-progress">
-                  <div class="thumbs-up-progress-bar" style:width="{thumbsUpProgress * 100}%"></div>
+              {#if $inputMode === 'hands'}
+                <p class="congrats-gesture-hint">or hold a thumbs up! 👍</p>
+                <div class="thumbs-up-progress-container">
+                  {#if thumbsUpProgress > 0}
+                  <div class="thumbs-up-progress">
+                    <div class="thumbs-up-progress-bar" style:width="{thumbsUpProgress * 100}%"></div>
+                  </div>
+                  {/if}
                 </div>
-                {/if}
-              </div>
+              {/if}
             </div>
           </div>
         </HTML>
