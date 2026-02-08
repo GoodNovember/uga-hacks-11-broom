@@ -22,9 +22,25 @@
     setMuted($musicMuted)
   })
 
+  let isFullscreen = $state(!!document.fullscreenElement)
+
   function toggleMute() {
     $musicMuted = !$musicMuted
   }
+
+  function toggleFullscreen() {
+    if (document.fullscreenElement) {
+      document.exitFullscreen()
+    } else {
+      document.documentElement.requestFullscreen()
+    }
+  }
+
+  $effect(() => {
+    const handler = () => { isFullscreen = !!document.fullscreenElement }
+    document.addEventListener('fullscreenchange', handler)
+    return () => document.removeEventListener('fullscreenchange', handler)
+  })
 
   $effect(() => {
     if (gameWasWon) {
@@ -49,6 +65,9 @@
       <div class="pause-text">PAUSED</div>
       <button class="mute-toggle" onclick={toggleMute}>
         {$musicMuted ? 'Unmute Music' : 'Mute Music'}
+      </button>
+      <button class="mute-toggle" onclick={toggleFullscreen}>
+        {isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
       </button>
       {#if pauseProgress > 0}
         <div class="pause-progress">

@@ -1,16 +1,37 @@
 <script>
+    import { onMount } from "svelte";
+
   let { onPlay, onPlayKeyboard, onPlayGamepad, onPlayTouch, hasCamera, hasPointer, hasGamepad, hasTouch } = $props()
 
   let dialog = $state()
+  let isFullscreen = $state(false)
 
   function openDialog() {
     dialog?.showModal()
   }
 
+  function toggleFullscreen() {
+    if (document.fullscreenElement) {
+      document.exitFullscreen()
+    } else {
+      document.documentElement.requestFullscreen()
+    }
+  }
+
+  $effect(() => {
+    const handler = () => { isFullscreen = !!document.fullscreenElement }
+    document.addEventListener('fullscreenchange', handler)
+    return () => document.removeEventListener('fullscreenchange', handler)
+  })
+
   function pick(handler) {
     dialog?.close()
     handler()
   }
+
+  onMount(()=>{
+    isFullscreen = !!document.fullscreenElement
+  })
 
   const modes = [
     {
@@ -71,6 +92,10 @@
 
   <button class="play-button" onclick={openDialog}>
     PLAY
+  </button>
+
+  <button class="fullscreen-btn" onclick={toggleFullscreen}>
+    {isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
   </button>
 </div>
 
@@ -148,6 +173,28 @@
   .play-button:hover {
     transform: scale(1.08);
     box-shadow: 0 0 50px rgba(255, 215, 0, 0.5);
+  }
+
+  .fullscreen-btn {
+    pointer-events: all;
+    margin-top: 1.5rem;
+    padding: 0.5rem 2rem;
+    font-size: 0.9rem;
+    font-weight: bold;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 0.5rem;
+    background: rgba(0, 0, 0, 0.4);
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s, background 0.2s;
+    font-family: inherit;
+    letter-spacing: 0.05em;
+  }
+
+  .fullscreen-btn:hover {
+    color: white;
+    border-color: rgba(255, 215, 0, 0.5);
+    background: rgba(0, 0, 0, 0.6);
   }
 
   /* Dialog */
