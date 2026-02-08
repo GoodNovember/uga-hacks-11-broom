@@ -1,8 +1,9 @@
 <script>
-  import { getContext } from "svelte"
+  import { getContext, onMount } from "svelte"
   import { Canvas } from "@threlte/core"
   import GameScene from "./GameScene.svelte"
-  import { score, maxScore, gameWon } from "$lib/stores/game.js"
+  import { score, maxScore, gameWon, musicMuted } from "$lib/stores/game.js"
+  import { startMusic, stopMusic, setMuted } from "$lib/utils/musicManager.js"
   import HandsInstructions from "./HandsInstructions.svelte";
 
   const handLandmarkContext = getContext("handLandmarker")
@@ -12,10 +13,23 @@
   let gameWasWon = $derived($maxScore > 0 && $score >= $maxScore)
   let handInstructionsDialog = $state()
 
+  onMount(() => {
+    startMusic()
+    return () => stopMusic()
+  })
+
+  $effect(() => {
+    setMuted($musicMuted)
+  })
+
+  function toggleMute() {
+    $musicMuted = !$musicMuted
+  }
+
   $effect(() => {
     if (gameWasWon) {
       // Small delay so the last ring "collected" feedback is visible
-      const timeout = setTimeout(() => { 
+      const timeout = setTimeout(() => {
         $gameWon = true
        }, 600)
       return () => clearTimeout(timeout)
@@ -33,7 +47,9 @@
   {#if isPaused && !$gameWon}
     <div class="pause-overlay">
       <div class="pause-text">PAUSED</div>
-      <!-- <div class="pause-hint">Open palm / Start / Esc to resume</div> -->
+      <button class="mute-toggle" onclick={toggleMute}>
+        {$musicMuted ? 'Unmute Music' : 'Mute Music'}
+      </button>
       {#if pauseProgress > 0}
         <div class="pause-progress">
           <div class="pause-progress-bar" style:width="{pauseProgress * 100}%"></div>
@@ -62,7 +78,6 @@
     justify-content: center;
     align-items: center;
     z-index: 5;
-    pointer-events: none;
   }
   .pause-text {
     font-size: 4rem;
@@ -89,5 +104,21 @@
     background: cyan;
     border-radius: 3px;
     transition: width 0.1s linear;
+  }
+  .mute-toggle {
+    margin-top: 1.5rem;
+    padding: 0.6rem 1.5rem;
+    font-size: 1rem;
+    font-weight: bold;
+    border: 2px solid rgba(255, 255, 255, 0.6);
+    border-radius: 0.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .mute-toggle:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: white;
   }
 </style>

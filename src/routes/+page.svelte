@@ -10,6 +10,7 @@
   import GamepadContext from "$lib/components/GamepadContext.svelte";
   import TouchContext from "$lib/components/TouchContext.svelte";
   import { gameState, inputMode } from "$lib/stores/game";
+  import { ensureContext } from "$lib/utils/musicManager.js";
 
   let mediaDevices: MediaDeviceInfo[] = $state([])
   let chooseCameraDialog = $state<HTMLDialogElement>()
@@ -94,22 +95,26 @@
   }
 
   function handlePlay() {
+    ensureContext()
     $inputMode = 'hands'
     $gameState = 'loading'
     showCameraSelectionDialog()
   }
 
   function handlePlayKeyboard() {
+    ensureContext()
     $inputMode = 'keyboard'
     $gameState = 'playing'
   }
 
   function handlePlayGamepad() {
+    ensureContext()
     $inputMode = 'gamepad'
     $gameState = 'playing'
   }
 
   function handlePlayTouch() {
+    ensureContext()
     $inputMode = 'touch'
     $gameState = 'playing'
   }

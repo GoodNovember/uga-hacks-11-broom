@@ -2,6 +2,7 @@
   import { T, useTask } from '@threlte/core'
   import { RigidBody, Collider } from '@threlte/rapier'
   import { score } from '$lib/stores/game.js'
+  import { playSfx } from '$lib/utils/musicManager.js'
   import { Vector3, Euler, Quaternion, DoubleSide } from 'three'
 
   let {
@@ -18,6 +19,7 @@
     if (scored) return
     scored = true
     score.update(n => n + 1)
+    playSfx('/wav/Pickup.wav')
   }
 
   // Guide crosshair — always mounted, controlled via ref
