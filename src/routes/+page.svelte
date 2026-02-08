@@ -8,6 +8,7 @@
   import { Canvas } from "@threlte/core";
   import KeyboardMouseContext from "$lib/components/KeyboardMouseContext.svelte";
   import GamepadContext from "$lib/components/GamepadContext.svelte";
+  import TouchContext from "$lib/components/TouchContext.svelte";
   import { gameState, inputMode } from "$lib/stores/game";
 
   let mediaDevices: MediaDeviceInfo[] = $state([])
@@ -19,6 +20,46 @@
 
   let modelReady = $state(false)
   let cameraReady = $state(false)
+
+  // Feature detection flags
+  let hasCamera = $state(false)
+  let hasPointer = $state(typeof window !== 'undefined' && window.matchMedia('(pointer: fine)').matches)
+  let hasGamepad = $state(false)
+  let hasTouch = $state(typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0))
+
+  onMount(() => {
+    // Detect cameras — need a brief getUserMedia call first so the browser
+    // populates the device list (some browsers hide devices until permission is granted)
+    if (navigator.mediaDevices?.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => {
+          stream.getTracks().forEach(t => t.stop())
+          return navigator.mediaDevices.enumerateDevices()
+        })
+        .then(devices => {
+          hasCamera = devices.some(d => d.kind === 'videoinput')
+        })
+        .catch(() => {})
+    }
+
+    // Detect gamepads (already connected or newly connected)
+    if (navigator.getGamepads) {
+      hasGamepad = Array.from(navigator.getGamepads()).some(g => g !== null)
+    }
+    const onGamepadConnected = () => { hasGamepad = true }
+    const onGamepadDisconnected = () => {
+      hasGamepad = navigator.getGamepads
+        ? Array.from(navigator.getGamepads()).some(g => g !== null)
+        : false
+    }
+    window.addEventListener('gamepadconnected', onGamepadConnected)
+    window.addEventListener('gamepaddisconnected', onGamepadDisconnected)
+
+    return () => {
+      window.removeEventListener('gamepadconnected', onGamepadConnected)
+      window.removeEventListener('gamepaddisconnected', onGamepadDisconnected)
+    }
+  })
 
   // Load hand tracking in the background immediately
   onMount(async () => {
@@ -65,6 +106,11 @@
 
   function handlePlayGamepad() {
     $inputMode = 'gamepad'
+    $gameState = 'playing'
+  }
+
+  function handlePlayTouch() {
+    $inputMode = 'touch'
     $gameState = 'playing'
   }
 
@@ -122,12 +168,16 @@
   <GamepadContext>
     <Game />
   </GamepadContext>
+{:else if $gameState === 'playing' && $inputMode === 'touch'}
+  <TouchContext>
+    <Game />
+  </TouchContext>
 {:else}
   <div class="start-canvas-container">
     <Canvas>
       <StartScreen />
     </Canvas>
-    <StartScreenUI onPlay={handlePlay} onPlayKeyboard={handlePlayKeyboard} onPlayGamepad={handlePlayGamepad} />
+    <StartScreenUI onPlay={handlePlay} onPlayKeyboard={handlePlayKeyboard} onPlayGamepad={handlePlayGamepad} onPlayTouch={handlePlayTouch} {hasCamera} {hasPointer} {hasGamepad} {hasTouch} />
     {#if $gameState === 'loading'}
       <div class="loading-indicator">
         {#if !modelReady}

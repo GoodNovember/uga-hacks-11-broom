@@ -1,5 +1,5 @@
 <script>
-  let { onPlay, onPlayKeyboard, onPlayGamepad } = $props()
+  let { onPlay, onPlayKeyboard, onPlayGamepad, onPlayTouch, hasCamera, hasPointer, hasGamepad, hasTouch } = $props()
 </script>
 
 <div class="start-screen-overlay">
@@ -9,16 +9,24 @@
   </div>
 
   <div class="actions">
-    <button class="play-button" onclick={onPlay}>
+    <button class="play-button" onclick={onPlay} disabled={!hasCamera}>
       Play With Your Hands
-    </button>
-    
-    <button class="play-button" onclick={onPlayKeyboard}>
-      Play With Mouse and Keyboard
+      {#if !hasCamera}<span class="hint">No camera detected</span>{/if}
     </button>
 
-    <button class="play-button" onclick={onPlayGamepad}>
+    <button class="play-button" onclick={onPlayKeyboard} disabled={!hasPointer}>
+      Play With Mouse and Keyboard
+      {#if !hasPointer}<span class="hint">No mouse detected</span>{/if}
+    </button>
+
+    <button class="play-button" onclick={onPlayGamepad} disabled={!hasGamepad}>
       Play With Gamepad
+      {#if !hasGamepad}<span class="hint">Connect a controller</span>{/if}
+    </button>
+
+    <button class="play-button" onclick={onPlayTouch} disabled={!hasTouch}>
+      Play With Touch
+      {#if !hasTouch}<span class="hint">No touch screen detected</span>{/if}
     </button>
   </div>
 </div>
@@ -41,18 +49,21 @@
   }
 
   .game-title {
-    font-size: 5rem;
+    font-size: 5dvw;
     font-weight: 900;
-    color: white;
-    text-shadow: 0 0 40px rgba(255, 215, 0, 0.6),
-                 0 4px 8px rgba(0, 0, 0, 0.5);
-    background: linear-gradient(135deg, #FFD700, #FFA500);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: gold;
+    text-shadow: 0 0 40px rgba(0,0,0,0.7), 0 4px 8px rgba(0, 0, 0, 0.5);
+    /* text-shadow: 0 0 40px rgba(255, 215, 0, 0.6), */
+                 /* 0 4px 8px rgba(0, 0, 0, 0.5); */
+    /* background: linear-gradient(135deg, #FFD700, #FFA500); */
+    /* -webkit-background-clip: text; */
+    /* -webkit-text-fill-color: transparent; */
     background-clip: text;
     margin: 0;
     letter-spacing: 0.1em;
     margin-bottom: 8rem;
+    width: 100%;
+
   }
 
   .actions {
@@ -94,5 +105,15 @@
     color: #1a1a2e;
     cursor: not-allowed;
     box-shadow: none;
+    opacity: 0.6;
+  }
+
+  .hint {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 400;
+    opacity: 0.7;
+    margin-top: 0.25rem;
+    letter-spacing: 0.05em;
   }
 </style>

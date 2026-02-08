@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount, setContext } from "svelte";
   import { detectGesture, isOpenPalm, isThumbsUp } from "$lib/utils/handControls.js";
+  import { gameWon } from "$lib/stores/game";
 
   let {
     mediaDevice,
@@ -26,6 +27,12 @@
   const PAUSE_HOLD_MS = 1500 // hold open palm for 1.5s to toggle pause
   let pauseProgress = $state(0) // 0-1 progress for visual indicator
   let palmCooldown = false // must release palm before toggling again
+
+  // Thumbs-up hold detection (for restart)
+  let thumbsUpHoldStart = 0
+  const THUMBS_UP_HOLD_MS = 1500
+  let thumbsUpProgress = $state(0)
+  let thumbsUpCooldown = false
 
   mediaElement.autoplay = true
   mediaElement.playsInline = true
@@ -66,11 +73,12 @@
         if(!ctx || !canvas) continue
         const gesture = detectGesture(landmarks)
         const openPalm = isOpenPalm(landmarks)
-        activeThumbsUp = isThumbsUp(landmarks)
+        const thumbsUp = isThumbsUp(landmarks)
 
-        // Open-palm hold pause/unpause detection
         const now = performance.now()
-        if (openPalm && !palmCooldown) {
+
+        // Open-palm hold pause/unpause detection (disabled during win screen)
+        if (openPalm && !palmCooldown && !$gameWon) {
           if (palmHoldStart === 0) palmHoldStart = now
           const held = now - palmHoldStart
           pauseProgress = Math.min(held / PAUSE_HOLD_MS, 1)
@@ -84,6 +92,24 @@
           palmHoldStart = 0
           pauseProgress = 0
           palmCooldown = false
+        }
+
+        // Thumbs-up hold detection (for restart on win screen)
+        if (thumbsUp && !thumbsUpCooldown) {
+          if (thumbsUpHoldStart === 0) thumbsUpHoldStart = now
+          const held = now - thumbsUpHoldStart
+          thumbsUpProgress = Math.min(held / THUMBS_UP_HOLD_MS, 1)
+          activeThumbsUp = held >= THUMBS_UP_HOLD_MS
+          if (activeThumbsUp) {
+            thumbsUpHoldStart = 0
+            thumbsUpProgress = 0
+            thumbsUpCooldown = true
+          }
+        } else if (!thumbsUp) {
+          thumbsUpHoldStart = 0
+          thumbsUpProgress = 0
+          activeThumbsUp = false
+          thumbsUpCooldown = false
         }
 
         // When paused, suppress flight gestures
@@ -229,6 +255,9 @@
     },
     get thumbsUp(){
       return activeThumbsUp
+    },
+    get thumbsUpProgress(){
+      return thumbsUpProgress
     }
   })
 

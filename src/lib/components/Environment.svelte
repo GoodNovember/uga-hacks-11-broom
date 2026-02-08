@@ -66,6 +66,8 @@
   <T.MeshBasicMaterial color="#87CEEB" side={BackSide} />
 </T.Mesh>
 
+<!-- <Sky /> -->
+
 <!-- Trees -->
 {#each trees as tree}
   <T.Group position={[tree.x, 0, tree.z]}>

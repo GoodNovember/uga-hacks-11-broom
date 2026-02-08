@@ -106,7 +106,8 @@
     get fingerDirection() { return currentDirection },
     get paused() { return paused },
     get pauseProgress() { return 0 },
-    get thumbsUp() { return false }
+    get thumbsUp() { return false },
+    get thumbsUpProgress() { return 0 }
   })
 </script>
 

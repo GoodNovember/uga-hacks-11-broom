@@ -17,8 +17,9 @@
 
   const isPaused = $derived.by(()=> handLandmarkContext?.paused)
   const isThumbsUp = $derived.by(()=> handLandmarkContext?.thumbsUp ?? false)
+  const thumbsUpProgress = $derived.by(()=> handLandmarkContext?.thumbsUpProgress ?? 0)
 
-  // Thumbs-up to restart when game is won
+  // Thumbs-up held long enough → restart
   $effect(()=>{
     if ($gameWon && isThumbsUp) {
       handlePlayAgain()
@@ -81,7 +82,7 @@
       <HUD>
         <HTML center>
           <div class="score-hud">
-            Rings Collected: <span class="current score">{$score}</span> / <span class="max score">{$maxScore}</span>
+            Rings Collected: <br/> <div class="score-wrapper"><span class="current score">{$score}</span> / <span class="max score">{$maxScore}</span></div>
           </div>
         </HTML>
       </HUD>
@@ -97,7 +98,14 @@
               <p class="congrats-subtitle">You collected all {$maxScore} rings!</p>
               <div class="congrats-score">{$score} / {$maxScore}</div>
               <button class="congrats-btn" onclick={handlePlayAgain}>Play Again</button>
-              <p class="congrats-gesture-hint">or show a thumbs up!</p>
+              <p class="congrats-gesture-hint">or hold a thumbs up! 👍</p>
+              <div class="thumbs-up-progress-container">
+                {#if thumbsUpProgress > 0}
+                <div class="thumbs-up-progress">
+                  <div class="thumbs-up-progress-bar" style:width="{thumbsUpProgress * 100}%"></div>
+                </div>
+                {/if}
+              </div>
             </div>
           </div>
         </HTML>
@@ -121,6 +129,9 @@
     font-family: sans-serif;
     font-size: 1.2rem;
     white-space: nowrap;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
   .score-hud .score {
     font-weight: bold;
@@ -129,6 +140,10 @@
   }
   .score-hud .current {
     color: #ffe3a6;
+  }
+  .score-wrapper {
+    font-size: 2rem;
+    margin-top: 0.2rem;
   }
   .congrats-overlay {
     position: absolute;
@@ -204,6 +219,27 @@
     margin-top: 0.75rem;
     font-size: 0.95rem;
     color: rgba(255, 255, 255, 0.5);
+  }
+  .thumbs-up-progress {
+    margin-top: 0.75rem;
+    margin: 0 auto;
+    width: 160px;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .thumbs-up-progress-bar {
+    height: 100%;
+    background: #FFD700;
+    border-radius: 3px;
+    transition: width 0.1s linear;
+  }
+
+  .thumbs-up-progress-container {
+    height: 12px; /* Ensure consistent spacing even when progress is 0 */
+    display: flex;
+    justify-content: center;
   }
 
   @keyframes fadeIn {

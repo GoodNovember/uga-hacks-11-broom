@@ -33,7 +33,7 @@
     <GameScene />
   </Canvas>
 
-  {#if isPaused}
+  {#if isPaused && !$gameWon}
     <div class="pause-overlay">
       <div class="pause-text">PAUSED</div>
       <div class="pause-hint">Open palm / Start / Esc to resume</div>
