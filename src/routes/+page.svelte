@@ -138,7 +138,7 @@
   }
 </script>
 
-<dialog bind:this={chooseCameraDialog}>
+<dialog class="camera-selection-dialog" bind:this={chooseCameraDialog}>
   <p>Which Camera should be used?</p>
   <div>
     {#each mediaDevices as device}
@@ -151,8 +151,8 @@
       <button onclick={populateVideoDevices}>Retry</button>
     {/each}
   </div>
-  <div>
-    <button disabled={!selectedMediaDeviceId} onclick={handleCloseCameraSelection}>Close</button>
+  <div class="button-row">
+    <button disabled={!selectedMediaDeviceId} onclick={handleCloseCameraSelection}>Begin Game</button>
   </div>
 </dialog>
 
@@ -205,5 +205,51 @@
     color: rgba(255, 255, 255, 0.6);
     font-size: 0.9rem;
     z-index: 10;
+  }
+
+  .camera-selection-dialog {
+    padding: 8rem;
+    border: none;
+    border-radius: 2rem;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    font-family: sans-serif;
+  }
+
+  .camera-selection-dialog p {
+    margin-top: 0;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #FFD700;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+  }
+
+  .camera-selection-dialog label {
+    margin-left: 0.5rem;
+    font-size: 1.2rem;
+  }
+
+  .camera-selection-dialog button {
+    margin-top: 2rem;
+    padding: 0.8rem 2rem;
+    font-size: 1.2rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 1rem;
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+    color: #1a1a2e;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+  }
+
+  .camera-selection-dialog button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 50px rgba(255, 215, 0, 0.5);
+  }
+
+  .button-row {
+    display: flex;
+    justify-content: center;
   }
 </style>

@@ -3,12 +3,14 @@
   import { Canvas } from "@threlte/core"
   import GameScene from "./GameScene.svelte"
   import { score, maxScore, gameWon } from "$lib/stores/game.js"
+  import HandsInstructions from "./HandsInstructions.svelte";
 
   const handLandmarkContext = getContext("handLandmarker")
   const isPaused = $derived(handLandmarkContext?.paused ?? false)
   const pauseProgress = $derived(handLandmarkContext?.pauseProgress ?? 0)
 
   let gameWasWon = $derived($maxScore > 0 && $score >= $maxScore)
+  let handInstructionsDialog = $state()
 
   $effect(() => {
     if (gameWasWon) {
@@ -21,11 +23,6 @@
       $gameWon = false
     }
   })
-
-  function handlePlayAgain() {
-    score.set(0)
-    $gameWon = false
-  }
 </script>
 
 <div class="game-canvas-container">
@@ -36,7 +33,7 @@
   {#if isPaused && !$gameWon}
     <div class="pause-overlay">
       <div class="pause-text">PAUSED</div>
-      <div class="pause-hint">Open palm / Start / Esc to resume</div>
+      <!-- <div class="pause-hint">Open palm / Start / Esc to resume</div> -->
       {#if pauseProgress > 0}
         <div class="pause-progress">
           <div class="pause-progress-bar" style:width="{pauseProgress * 100}%"></div>
@@ -45,6 +42,10 @@
     </div>
   {/if}
 </div>
+
+<dialog bind:this={handInstructionsDialog} class="hand-instructions-dialog">
+  <HandsInstructions/>
+</dialog>
 
 <style>
   .game-canvas-container {
